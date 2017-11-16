@@ -6,6 +6,14 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/api/prompt/:message', (req, res) => {
+    setTimeout(function() {
+        console.log('Responding to /api/prompt after timeout');
+        io.emit('chat message', req.params.message);
+        res.send(req.params);
+    }, 3000);
+});
+
 io.on('connection', function(socket){
     console.log('a user connected');
     socket.on('disconnect', function(){
