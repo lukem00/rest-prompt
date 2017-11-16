@@ -22,15 +22,16 @@ app.get('/api/prompt/:message', (req, res) => {
 });
 
 io.on('connection', function(socket){
-    console.log('a user connected');
+    console.log('Client connected: ' + socket.id);
     socket.on('disconnect', function(){
-        console.log('user disconnected');
+        console.log('Client disconnected:' + socket.id);
     });
     socket.on('chat message', function(msg){
         console.log('message: ' + msg);
         io.emit('chat message', msg);
         subject.next(msg);
     }); 
+    socket.emit('chat message', 'Welcome to REST Prompt');
 });
 
 http.listen(3000, function(){
