@@ -1,17 +1,24 @@
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+const app = require('express')();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+const Rx = require('rxjs/Rx');
+
+var subject = new Rx.Subject();
 
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
+subject.subscribe(v => console.log('Observed value: ' + v));
+
 app.get('/api/prompt/:message', (req, res) => {
-    setTimeout(function() {
-        console.log('Responding to /api/prompt after timeout');
-        io.emit('chat message', req.params.message);
-        res.send(req.params);
-    }, 3000);
+    console.log('/api/prompt/' + req.params.message);
+    io.emit('chat message', req.params.message);
+    var subscription = subject.subscribe(v => {
+        console.log('Observed within REST handler: ' + v);
+        res.send(v);
+        subscription.unsubscribe();
+    });
 });
 
 io.on('connection', function(socket){
@@ -22,6 +29,8 @@ io.on('connection', function(socket){
     socket.on('chat message', function(msg){
         console.log('message: ' + msg);
         io.emit('chat message', msg);
+        // TODO: respond to current /api/prompt request
+        subject.next(msg);
     }); 
 });
 
